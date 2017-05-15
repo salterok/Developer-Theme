@@ -4,24 +4,32 @@ const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const HtmlWebpackPlugin = require("webpack-html-plugin");
 
 module.exports = function(args) {
-
     args = args || {};
 
-
-    const styles = args.production ? {
-        test: /\.s?css$/, 
+    const styles = args.production ? [{
+        test: /\.(s?css|less)$/, 
         exclude: /node_modules/, 
-        loader: ExtractTextPlugin.extract(
-            { fallbackLoader: "style-loader", loader: [ "css-loader", "postcss-loader", "sass-loader" ] }
+        use: ExtractTextPlugin.extract(
+            { fallbackLoader: "style-loader", use: [ "css-loader", "postcss-loader", "sass-loader" ] }
         )
-    } : {
-        test: /\.s?css$/,
-        use: [
-            "style-loader",
-            "css-loader",
-            "sass-loader",
-        ]
-    };
+    }] : [
+        {
+            test: /\.s?css$/,
+            use: [
+                "style-loader",
+                "css-loader",
+                "sass-loader",
+            ]
+        },
+        {
+            test: /\.less$/,
+            use: [
+                "style-loader",
+                "css-loader",
+                "less-loader",
+            ]
+        },
+    ];
 
     return {
         context: path.resolve(__dirname, "."),
@@ -30,7 +38,10 @@ module.exports = function(args) {
             filename: "[name].js",
             publicPath: "/"
         },
-        entry: "index.js",
+        entry: {
+            vendor: "vendor.js",
+            app: "index.js"
+        },
         module: {
             rules: [
                 {
@@ -45,8 +56,9 @@ module.exports = function(args) {
                 { test: /\.(woff|woff2|ttf|eot|mp3|ctm|mp4|bmp|gif|png|je?pg)(\?.*)?$/, loader: "file-loader", query: {
                     name: "assets/files/[name]_[sha1:hash:base26:7].[ext]"
                 } },
+                { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: "url-loader?limit=10000&mimetype=image/svg+xml" },
                 { test: /\.ejs$/, loader: "ejs-loader" },
-                styles,
+                ...styles,
             ]
         },
         resolve: {
@@ -54,7 +66,7 @@ module.exports = function(args) {
                 ".",
                 "node_modules",
             ],
-            extensions: [".json", ".js", ".jsx", ".scss", ".html"]
+            extensions: [".json", ".js", ".ejs", ".scss", ".less", ".html"]
         },
         devtool: args.production ? "cheap-source-map" : "inline-source-map",
         devServer: {
@@ -63,18 +75,25 @@ module.exports = function(args) {
             hot: true,
         },
         plugins: [
-            // new CommonsChunkPlugin({
-            //     name: "common",
+            new webpack.ProvidePlugin({
+                $: "jquery",
+                jQuery: "jquery"
+            }),
+            // new webpack.optimize.CommonsChunkPlugin({
+            //     name: "vendor",
             //     filename: "[name].js",
             //     minChunks: Infinity
             // }),
 
             new HtmlWebpackPlugin({
                 filename: "index.html",
+                title: "Sergiy Samborskiy <salterok@gmail.com> portfolio",
                 template: "index.ejs",
-                chunks: [ "common", "ScotlandYard" ],
+                chunks: [ "app", "vendor" ],
                 cache: false,
-                hash: true
+                hash: true,
+                inject: true,
+                favicon: "favicon.ico"
             }),
         ]
     };
