@@ -1,7 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const HtmlWebpackPlugin = require("webpack-html-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = function(args) {
     args = args || {};
@@ -57,7 +57,7 @@ module.exports = function(args) {
                     name: "assets/files/[name]_[sha1:hash:base26:7].[ext]"
                 } },
                 { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: "url-loader?limit=10000&mimetype=image/svg+xml" },
-                { test: /\.ejs$/, loader: "ejs-loader" },
+                { test: /\.ejs$/, use: "ejs-loader" },
                 ...styles,
             ]
         },
